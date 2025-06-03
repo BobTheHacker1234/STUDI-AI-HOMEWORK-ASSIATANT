@@ -11,6 +11,6 @@ STUDI is your personal AI-powered study assistant bot. Designed for students of 
 - 🔔 **Smart Reminders** – Never miss a deadline again.
 
 ## 🚀 Getting Started
-1. Clone this repo:  
-   ```bash
-   git clone https://github.com/yourusername/studi.git
+1. Go to Google's Gemini and copy the API key
+2. Paste the API key in the API line of code with the empty quotations it should look like this key = ""
+3. Run the code and enjoy or right click on the file and open with desired web browser!
