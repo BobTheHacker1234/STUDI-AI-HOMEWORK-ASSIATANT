@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Minimal custom styles for STUDI */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #f0f0f0; /* Simple light gray background */
+            overflow-y: auto;
+        }
+        .container {
+            max-width: 700px; /* Smaller max-width */
+            width: 100%;
+            margin: 20px;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 0.5rem; /* Less rounded corners */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Simpler shadow */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* Smaller gap */
+        }
+        .study-card {
+            background-color: #fefefe;
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        textarea {
+            resize: vertical;
+        }
+        /* Basic flashcard styles */
+        .flashcard-flip-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 180px; /* Slightly smaller flashcard */
+            margin: 0 auto;
+            cursor: pointer; /* Indicate it's clickable */
+        }
+        .flashcard-flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s; /* Faster flip */
+            transform-style: preserve-3d;
+        }
+        .flashcard-flip-container.flipped .flashcard-flipper {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+        .flashcard-front {
+            background-color: #e6f7ff; /* Lighter blue */
+            color: #333;
+        }
+        .flashcard-back {
+            background-color: #e6ffe6; /* Lighter green */
+            color: #333;
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-6 font-sans">
+
+    <div class="container">
+        <header class="text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-700 mb-2">
+                STUDI
+            </h1>
+            <p class="text-md text-gray-500">
+                Your basic study helper. Not as good as STUDI Pro.
+            </p>
+        </header>
+
+        <div class="bg-white p-5 rounded-md shadow-sm">
+            <label for="study-topic-input" class="block text-gray-600 text-base font-medium mb-2">
+                Enter Topic for Study:
+            </label>
+            <textarea
+                id="study-topic-input"
+                class="w-full p-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-300 text-gray-700 min-h-[80px]"
+                rows="3"
+                placeholder="e.g., 'Volcanoes', 'Fractions', 'Basic Spanish Greetings'"
+            ></textarea>
+
+            <div class="mt-3">
+                <label for="study-mode-type" class="block text-gray-600 text-sm font-medium mb-1">Study Material Type:</label>
+                <select id="study-mode-type" class="w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-300">
+                    <option value="summary" selected>Summary</option>
+                    <option value="flashcards">Flashcards</option>
+                </select>
+            </div>
+
+            <button
+                id="generate-study-material-btn"
+                class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Generate Study Material
+            </button>
+            <button
+                id="clear-study-material-btn"
+                class="mt-2 w-full bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-md transition duration-150 ease-in-out hidden"
+            >
+                Clear Study Material
+            </button>
+        </div>
+
+        <div id="loading-spinner" class="text-center py-4 hidden">
+            <div class="animate-spin inline-block w-8 h-8 border-3 border-blue-400 border-t-transparent rounded-full"></div>
+            <p class="text-gray-500 mt-2 text-base">Generating content...</p>
+        </div>
+
+        <div id="error-message" class="w-full bg-red-100 border border-red-300 text-red-600 px-3 py-2 rounded-md hidden" role="alert">
+            <span id="error-text" class="block text-sm"></span>
+        </div>
+
+        <div id="study-material-section" class="bg-white p-5 rounded-md shadow-sm hidden">
+            <h2 id="study-material-title" class="text-2xl font-bold text-gray-700 mb-4 text-center"></h2>
+            <div id="study-material-content" class="space-y-4">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables ---
+        const API_KEY = ""; // Canvas will inject this at runtime
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+        let flashcards = [];
+        let currentFlashcardIndex = 0;
+
+        // --- DOM Elements ---
+        const studyTopicInput = document.getElementById('study-topic-input');
+        const studyModeTypeSelect = document.getElementById('study-mode-type');
+        const generateStudyMaterialBtn = document.getElementById('generate-study-material-btn');
+        const clearStudyMaterialBtn = document.getElementById('clear-study-material-btn');
+
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+
+        const studyMaterialSection = document.getElementById('study-material-section');
+        const studyMaterialTitle = document.getElementById('study-material-title');
+        const studyMaterialContent = document.getElementById('study-material-content');
+
+        // --- Event Listeners ---
+        generateStudyMaterialBtn.addEventListener('click', generateStudyMaterial);
+        clearStudyMaterialBtn.addEventListener('click', resetUI);
+
+        // --- Helper Functions ---
+
+        /**
+         * Displays an error message in the UI.
+         * @param {string} message - The error message to display.
+         */
+        function displayError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the error message.
+         */
+        function hideError() {
+            errorMessage.classList.add('hidden');
+            errorText.textContent = '';
+        }
+
+        /**
+         * Shows the loading spinner.
+         */
+        function showLoading() {
+            loadingSpinner.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the loading spinner.
+         */
+        function hideLoading() {
+            loadingSpinner.classList.add('hidden');
+        }
+
+        /**
+         * Sends a prompt to the Gemini API and returns the structured JSON response.
+         * @param {string} promptText - The text prompt for the LLM.
+         * @param {object} schema - The JSON schema for the expected response.
+         * @returns {Promise<object|null>} - Parsed JSON response or null on error.
+         */
+        async function getGeminiStructuredResponse(promptText, schema) {
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: promptText }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                }
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content) {
+                    let contentData = result.candidates[0].content;
+                    if (Array.isArray(contentData)) {
+                        contentData = contentData[0];
+                    }
+                    if (contentData && contentData.parts && contentData.parts.length > 0 && contentData.parts[0].text) {
+                        return JSON.parse(contentData.parts[0].text);
+                    }
+                }
+                displayError('Could not get valid response from AI. Response structure unexpected.');
+                return null;
+            } catch (err) {
+                console.error('API Call Error:', err);
+                displayError(`Failed to communicate with AI: ${err.message || 'An unknown error occurred.'}`);
+                return null;
+            }
+        }
+
+        /**
+         * Sends a prompt to the Gemini API and returns plain text response.
+         * @param {string} promptText - The text prompt for the LLM.
+         * @returns {Promise<string|null>} - Plain text response or null on error.
+         */
+        async function getGeminiPlainTextResponse(promptText) {
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: promptText }] }]
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                }
+                displayError('Could not get valid text response from AI. Response structure unexpected.');
+                return null;
+            } catch (err) {
+                console.error('API Call Error:', err);
+                displayError(`Failed to communicate with AI: ${err.message || 'An unknown error occurred.'}`);
+                return null;
+            }
+        }
+
+        // --- Main Study Functions ---
+
+        /**
+         * Resets the UI to its initial state for study material generation.
+         */
+        function resetUI() {
+            studyTopicInput.value = '';
+            studyTopicInput.disabled = false;
+            studyModeTypeSelect.disabled = false;
+            generateStudyMaterialBtn.disabled = false;
+            generateStudyMaterialBtn.textContent = 'Generate Study Material';
+            clearStudyMaterialBtn.classList.add('hidden');
+
+            hideError();
+            hideLoading();
+            studyMaterialSection.classList.add('hidden');
+            studyMaterialTitle.textContent = '';
+            studyMaterialContent.innerHTML = '';
+            flashcards = [];
+            currentFlashcardIndex = 0;
+        }
+
+        /**
+         * Generates study material (summary or flashcards) based on user input.
+         */
+        async function generateStudyMaterial() {
+            const topic = studyTopicInput.value.trim();
+            const studyType = studyModeTypeSelect.value;
+
+            if (!topic) {
+                displayError('Please enter a topic for study material.');
+                return;
+            }
+
+            // Disable inputs and show loading
+            studyTopicInput.disabled = true;
+            studyModeTypeSelect.disabled = true;
+            generateStudyMaterialBtn.disabled = true;
+            generateStudyMaterialBtn.textContent = 'Generating...';
+            hideError();
+            showLoading();
+
+            // Hide previous study material
+            studyMaterialSection.classList.add('hidden');
+            studyMaterialTitle.textContent = '';
+            studyMaterialContent.innerHTML = '';
+            clearStudyMaterialBtn.classList.add('hidden');
+
+            let generatedContent = null;
+
+            if (studyType === 'summary') {
+                // Simpler prompt for a basic summary
+                const prompt = `Provide a concise summary of the topic: "${topic}".`;
+                generatedContent = await getGeminiPlainTextResponse(prompt);
+                if (generatedContent) {
+                    studyMaterialTitle.textContent = `Summary of "${topic}"`;
+                    studyMaterialContent.innerHTML = `<div class="study-card whitespace-pre-wrap">${generatedContent}</div>`;
+                }
+            } else if (studyType === 'flashcards') {
+                // Simpler prompt for flashcards, fixed to 5
+                const prompt = `Generate 5 flashcards (question and answer pairs) about the following topic: "${topic}". Provide the output as a JSON array of objects, where each object has "question" and "answer" properties.`;
+                const schema = {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            "question": { "type": "STRING" },
+                            "answer": { "type": "STRING" }
+                        },
+                        "required": ["question", "answer"]
+                    }
+                };
+                flashcards = await getGeminiStructuredResponse(prompt, schema);
+                if (flashcards && flashcards.length > 0) {
+                    studyMaterialTitle.textContent = `Flashcards for "${topic}"`;
+                    currentFlashcardIndex = 0; // Reset to first flashcard
+                    displayFlashcard();
+                    generatedContent = true; // Indicate success for UI
+                } else if (flashcards && flashcards.length === 0) {
+                    displayError('No flashcards generated for this topic. Please try another topic.');
+                }
+            }
+
+            hideLoading();
+            if (generatedContent) {
+                studyMaterialSection.classList.remove('hidden');
+                clearStudyMaterialBtn.classList.remove('hidden');
+            } else {
+                // Error message already displayed by API call functions
+                resetUI(); // Reset UI on failure
+            }
+
+            generateStudyMaterialBtn.disabled = false;
+            generateStudyMaterialBtn.textContent = 'Generate Study Material';
+        }
+
+        /**
+         * Displays the current flashcard and navigation buttons.
+         */
+        function displayFlashcard() {
+            studyMaterialContent.innerHTML = ''; // Clear previous content
+            if (flashcards.length === 0) return;
+
+            const card = flashcards[currentFlashcardIndex];
+
+            const flipContainer = document.createElement('div');
+            flipContainer.className = 'flashcard-flip-container';
+            flipContainer.addEventListener('click', () => {
+                flipContainer.classList.toggle('flipped');
+            });
+
+            const flipper = document.createElement('div');
+            flipper.className = 'flashcard-flipper';
+
+            const front = document.createElement('div');
+            front.className = 'flashcard-front';
+            front.textContent = card.question;
+
+            const back = document.createElement('div');
+            back.className = 'flashcard-back';
+            back.textContent = card.answer;
+
+            flipper.appendChild(front);
+            flipper.appendChild(back);
+            flipContainer.appendChild(flipper);
+            studyMaterialContent.appendChild(flipContainer);
+
+            // Navigation buttons
+            const navDiv = document.createElement('div');
+            navDiv.className = 'flex justify-between items-center mt-4'; /* Smaller margin */
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'px-3 py-1 bg-blue-400 text-white rounded-md text-sm hover:bg-blue-500 disabled:opacity-50'; /* Simpler button */
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentFlashcardIndex === 0;
+            prevBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card flip
+                if (currentFlashcardIndex > 0) {
+                    currentFlashcardIndex--;
+                    displayFlashcard();
+                }
+            });
+
+            const counter = document.createElement('span');
+            counter.className = 'text-gray-500 text-sm'; /* Smaller text */
+            counter.textContent = `${currentFlashcardIndex + 1} / ${flashcards.length}`;
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'px-3 py-1 bg-blue-400 text-white rounded-md text-sm hover:bg-blue-500 disabled:opacity-50'; /* Simpler button */
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentFlashcardIndex === flashcards.length - 1;
+            nextBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card flip
+                if (currentFlashcardIndex < flashcards.length - 1) {
+                    currentFlashcardIndex++;
+                    displayFlashcard();
+                }
+            });
+
+            navDiv.appendChild(prevBtn);
+            navDiv.appendChild(counter);
+            navDiv.appendChild(nextBtn);
+            studyMaterialContent.appendChild(navDiv);
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', resetUI);
+    </script>
+</body>
+</html>

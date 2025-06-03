@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDI Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics and scrollability */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #e0f2fe, #c3dafe); /* Light blue to indigo gradient */
+            overflow-y: auto; /* Allow scrolling on the body */
+            color: #333; /* Default text color */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode {
+            background: linear-gradient(to bottom right, #1a202c, #2d3748); /* Darker gradient */
+            color: #e2e8f0; /* Light text color */
+        }
+        .container {
+            max-width: 900px; /* Increased max-width for better layout */
+            width: 100%;
+            margin: 20px;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Space between sections */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark-mode .container {
+            background-color: #2d3748; /* Darker background */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        .question-card, .flashcard-card, .summary-card, .notes-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        body.dark-mode .question-card, body.dark-mode .flashcard-card, body.dark-mode .summary-card, body.dark-mode .notes-card {
+            background-color: #4a5568; /* Darker card background */
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        textarea {
+            resize: vertical; /* Allow vertical resizing */
+            background-color: #ffffff; /* Ensure textarea background is white in light mode */
+            color: #333; /* Ensure textarea text is dark in light mode */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode textarea {
+            background-color: #2d3748; /* Darker textarea background */
+            color: #e2e8f0; /* Lighter textarea text */
+        }
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: #4a5568;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background: #a0aec0;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+            cursor: pointer;
+        }
+        body.dark-mode ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e0;
+        }
+        .tab-button.active {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        body.dark-mode .tab-button.active {
+            background-color: #667eea; /* Indigo-500 */
+        }
+        .flashcard-flip-container {
+            perspective: 1000px; /* For 3D flip effect */
+            width: 100%;
+            height: 200px; /* Fixed height for flashcard */
+            margin: 0 auto;
+        }
+        .flashcard-flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard-flip-container.flipped .flashcard-flipper {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .flashcard-front {
+            background-color: #e0f2fe; /* Light blue */
+            color: #1e3a8a; /* Dark blue */
+        }
+        body.dark-mode .flashcard-front {
+            background-color: #3182ce; /* Darker blue for dark mode */
+            color: #e0f2fe;
+        }
+        .flashcard-back {
+            background-color: #d1fae5; /* Light green */
+            color: #065f46; /* Dark green */
+            transform: rotateY(180deg);
+        }
+        body.dark-mode .flashcard-back {
+            background-color: #38a169; /* Darker green for dark mode */
+            color: #d1fae5;
+        }
+        /* Dark Mode Toggle Switch Styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+        /* Round sliders */
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        /* Chat bubble styles */
+        .chat-message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.5rem;
+            word-wrap: break-word;
+        }
+        .chat-user {
+            background-color: #e0f2fe; /* Light blue */
+            align-self: flex-end;
+            margin-left: auto;
+            color: #1e3a8a;
+        }
+        body.dark-mode .chat-user {
+            background-color: #3182ce;
+            color: #e0f2fe;
+        }
+        .chat-ai {
+            background-color: #f3f4f6; /* Light gray */
+            align-self: flex-start;
+            margin-right: auto;
+            color: #374151;
+        }
+        body.dark-mode .chat-ai {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6 font-sans">
+
+    <div class="container">
+        <header class="text-center">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-800 mb-2 dark:text-white">
+                Study Buddy Pro
+            </h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300">
+                Your enhanced assistant for homework and studying!
+            </p>
+        </header>
+
+        <div class="flex justify-end items-center mb-4">
+            <span class="text-gray-700 dark:text-gray-300 mr-3">Dark Mode</span>
+            <label class="switch">
+                <input type="checkbox" id="dark-mode-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+
+        <div class="flex justify-center mb-6">
+            <button id="test-mode-tab" class="tab-button px-6 py-3 rounded-l-lg font-semibold text-lg transition-all duration-200 active bg-indigo-600 text-white">Test Mode</button>
+            <button id="study-mode-tab" class="tab-button px-6 py-3 font-semibold text-lg transition-all duration-200 bg-gray-200 text-gray-700 hover:bg-gray-300">Study Mode</button>
+            <button id="ai-chat-tab" class="tab-button px-6 py-3 rounded-r-lg font-semibold text-lg transition-all duration-200 bg-gray-200 text-gray-700 hover:bg-gray-300">AI Chat</button>
+        </div>
+
+        <div id="test-mode-content" class="tab-content">
+            <div class="bg-white p-6 rounded-xl shadow-lg dark:bg-gray-700">
+                <label for="topic-input" class="block text-gray-700 text-lg font-semibold mb-3 dark:text-gray-200">
+                    Enter Topic:
+                </label>
+                <textarea
+                    id="topic-input"
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-800 min-h-[100px] dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
+                    rows="4"
+                    placeholder="e.g., 'The Water Cycle', 'Algebraic Equations', 'Key events of World War II'"
+                ></textarea>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label for="num-questions" class="block text-gray-700 text-sm font-medium mb-1 dark:text-gray-200">Number of Questions:</label>
+                        <select id="num-questions" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="question-type" class="block text-gray-700 text-sm font-medium mb-1 dark:text-gray-200">Question Type:</label>
+                        <select id="question-type" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
+                            <option value="both" selected>Both MC & Short Answer</option>
+                            <option value="mc">Multiple Choice Only</option>
+                            <option value="sa">Short Answer Only</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="difficulty" class="block text-gray-700 text-sm font-medium mb-1 dark:text-gray-200">Difficulty:</label>
+                        <select id="difficulty" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
+                            <option value="medium" selected>Medium</option>
+                            <option value="easy">Easy</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button
+                    id="generate-test-btn"
+                    class="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Generate Test
+                </button>
+                <button
+                    id="new-test-btn"
+                    class="mt-3 w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 hidden"
+                >
+                    Generate New Test
+                </button>
+            </div>
+
+            <div id="loading-spinner" class="text-center py-8 hidden">
+                <div class="animate-spin inline-block w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                <p class="text-gray-600 mt-3 text-lg dark:text-gray-300">Generating content, please wait...</p>
+            </div>
+
+            <div id="error-message" class="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative hidden" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span id="error-text" class="block sm:inline ml-2"></span>
+            </div>
+
+            <div id="test-section" class="bg-white p-6 rounded-xl shadow-lg hidden dark:bg-gray-700">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center dark:text-white">Your Test</h2>
+                <div id="questions-container" class="space-y-6">
+                    </div>
+
+                <div class="mt-6 text-center">
+                    <button
+                        id="submit-test-btn"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    >
+                        Submit Test
+                    </button>
+                    <div id="evaluation-spinner" class="text-center py-4 hidden">
+                        <div class="animate-spin inline-block w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full"></div>
+                        <p class="text-gray-600 mt-1 dark:text-gray-300">Evaluating answers...</p>
+                    </div>
+                    <p id="score-display" class="text-2xl font-bold text-gray-800 mt-4 hidden dark:text-white"></p>
+                    <button
+                        id="show-answer-key-btn"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 mt-3 hidden"
+                    >
+                        Show Answer Key
+                    </button>
+                    <button
+                        id="retake-test-btn"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 mt-3 hidden"
+                    >
+                        Retake Test
+                    </button>
+                    <button
+                        id="save-progress-btn"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 mt-3"
+                    >
+                        Save Progress
+                    </button>
+                    <button
+                        id="load-progress-btn"
+                        class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 mt-3 hidden"
+                    >
+                        Load Last Test
+                    </button>
+                    <button
+                        id="print-test-btn"
+                        class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 mt-3"
+                    >
+                        Print Test
+                    </button>
+                </div>
+            </div>
+
+            <div id="answer-key-section" class="bg-white p-6 rounded-xl shadow-lg mt-8 hidden dark:bg-gray-700">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center dark:text-white">Answer Key</h2>
+                <div id="answer-key-container" class="space-y-4">
+                    </div>
+                <button
+                    id="print-answer-key-btn"
+                    class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 mt-6"
+                >
+                    Print Answer Key
+                </button>
+            </div>
+        </div>
+
+        <div id="study-mode-content" class="tab-content hidden">
+            <div class="bg-white p-6 rounded-xl shadow-lg dark:bg-gray-700">
+                <label for="study-topic-input" class="block text-gray-700 text-lg font-semibold mb-3 dark:text-gray-200">
+                    Enter Topic for Study:
+                </label>
+                <textarea
+                    id="study-topic-input"
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-800 min-h-[100px] dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
+                    rows="4"
+                    placeholder="e.g., 'Photosynthesis', 'The Roman Empire', 'Basic Geometry Concepts'"
+                ></textarea>
+
+                <div class="mt-4">
+                    <label for="study-mode-type" class="block text-gray-700 text-sm font-medium mb-1 dark:text-gray-200">Study Material Type:</label>
+                    <select id="study-mode-type" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
+                        <option value="summary" selected>Summary</option>
+                        <option value="flashcards">Flashcards</option>
+                        <option value="notes">Study Notes</option>
+                    </select>
+                </div>
+
+                <button
+                    id="generate-study-material-btn"
+                    class="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Generate Study Material
+                </button>
+                <button
+                    id="clear-study-material-btn"
+                    class="mt-3 w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 hidden"
+                >
+                    Clear Study Material
+                </button>
+            </div>
+
+            <div id="study-material-section" class="bg-white p-6 rounded-xl shadow-lg hidden dark:bg-gray-700">
+                <h2 id="study-material-title" class="text-3xl font-bold text-gray-800 mb-6 text-center dark:text-white"></h2>
+                <div id="study-material-content" class="space-y-6">
+                    </div>
+            </div>
+        </div>
+
+        <div id="ai-chat-content" class="tab-content hidden">
+            <div class="bg-white p-6 rounded-xl shadow-lg dark:bg-gray-700">
+                <label for="chat-topic-input" class="block text-gray-700 text-lg font-semibold mb-3 dark:text-gray-200">
+                    Topic for AI Chat (Optional):
+                </label>
+                <textarea
+                    id="chat-topic-input"
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-800 min-h-[80px] dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
+                    rows="2"
+                    placeholder="e.g., 'Quantum Physics' or leave blank for general chat"
+                ></textarea>
+                <div id="chat-history" class="h-80 overflow-y-auto border border-gray-300 rounded-lg p-4 mb-4 flex flex-col dark:bg-gray-800">
+                    </div>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="chat-input"
+                        class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
+                        placeholder="Ask the AI a question..."
+                    />
+                    <button
+                        id="send-chat-btn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                        Send
+                    </button>
+                    <button
+                        id="clear-chat-btn"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    >
+                        Clear
+                    </button>
+                </div>
+                <div id="chat-loading-spinner" class="text-center py-2 hidden">
+                    <div class="animate-spin inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <p class="text-gray-600 mt-1 text-sm dark:text-gray-300">AI is thinking...</p>
+                </div>
+            </div>
+        </div>
+
+        <button
+            id="feedback-btn"
+            class="fixed bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2"
+        >
+            Feedback
+        </button>
+    </div>
+
+    <script>
+        // --- Global Variables ---
+        const API_KEY = ""; // Canvas will inject this at runtime
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+        const LOCAL_STORAGE_KEY = 'studyBuddyProData';
+        const CHAT_HISTORY_KEY = 'studyBuddyChatHistory';
+
+        let testQuestions = [];
+        let userAnswers = {};
+        let questionInputElements = []; // To store references to input elements (radio buttons, textareas)
+        let submissionResults = []; // Stores evaluation results for short answers
+        let currentFlashcardIndex = 0;
+        let flashcards = [];
+        let chatHistory = []; // Stores chat messages for the AI Chat tab
+
+        // --- DOM Elements (Tab Navigation) ---
+        const testModeTab = document.getElementById('test-mode-tab');
+        const studyModeTab = document.getElementById('study-mode-tab');
+        const aiChatTab = document.getElementById('ai-chat-tab'); // New AI Chat tab
+
+        const testModeContent = document.getElementById('test-mode-content');
+        const studyModeContent = document.getElementById('study-mode-content');
+        const aiChatContent = document.getElementById('ai-chat-content'); // New AI Chat content div
+
+        // --- DOM Elements (Test Mode) ---
+        const topicInput = document.getElementById('topic-input');
+        const numQuestionsSelect = document.getElementById('num-questions');
+        const questionTypeSelect = document.getElementById('question-type');
+        const difficultySelect = document.getElementById('difficulty');
+        const generateTestBtn = document.getElementById('generate-test-btn');
+        const newTestBtn = document.getElementById('new-test-btn');
+
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const evaluationSpinner = document.getElementById('evaluation-spinner');
+
+        const testSection = document.getElementById('test-section');
+        const questionsContainer = document.getElementById('questions-container');
+        const submitTestBtn = document.getElementById('submit-test-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const showAnswerKeyBtn = document.getElementById('show-answer-key-btn');
+        const retakeTestBtn = document.getElementById('retake-test-btn');
+        const saveProgressBtn = document.getElementById('save-progress-btn');
+        const loadProgressBtn = document.getElementById('load-progress-btn');
+        const printTestBtn = document.getElementById('print-test-btn');
+        const printAnswerKeyBtn = document.getElementById('print-answer-key-btn');
+
+        const answerKeySection = document.getElementById('answer-key-section');
+        const answerKeyContainer = document.getElementById('answer-key-container');
+
+        // --- DOM Elements (Study Mode) ---
+        const studyTopicInput = document.getElementById('study-topic-input');
+        const studyModeTypeSelect = document.getElementById('study-mode-type');
+        const generateStudyMaterialBtn = document.getElementById('generate-study-material-btn');
+        const clearStudyMaterialBtn = document.getElementById('clear-study-material-btn');
+        const studyMaterialSection = document.getElementById('study-material-section');
+        const studyMaterialTitle = document.getElementById('study-material-title');
+        const studyMaterialContent = document.getElementById('study-material-content');
+
+        // --- DOM Elements (AI Chat Mode) ---
+        const chatTopicInput = document.getElementById('chat-topic-input');
+        const chatHistoryDiv = document.getElementById('chat-history');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatBtn = document.getElementById('send-chat-btn');
+        const clearChatBtn = document.getElementById('clear-chat-btn');
+        const chatLoadingSpinner = document.getElementById('chat-loading-spinner');
+
+        // --- Global UI Elements ---
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const feedbackBtn = document.getElementById('feedback-btn');
+
+        // --- Event Listeners ---
+        generateTestBtn.addEventListener('click', generateTest);
+        newTestBtn.addEventListener('click', resetTestModeUI);
+        submitTestBtn.addEventListener('click', submitTest);
+        showAnswerKeyBtn.addEventListener('click', showAnswerKey);
+        retakeTestBtn.addEventListener('click', retakeTest);
+        saveProgressBtn.addEventListener('click', saveProgress);
+        loadProgressBtn.addEventListener('click', loadProgress);
+        printTestBtn.addEventListener('click', () => printSection('test-section', 'Your Test'));
+        printAnswerKeyBtn.addEventListener('click', () => printSection('answer-key-section', 'Answer Key'));
+
+        generateStudyMaterialBtn.addEventListener('click', generateStudyMaterial);
+        clearStudyMaterialBtn.addEventListener('click', resetStudyModeUI);
+
+        sendChatBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { // Allow shift+enter for new line
+                e.preventDefault(); // Prevent default form submission
+                sendChatMessage();
+            }
+        });
+        clearChatBtn.addEventListener('click', clearChatHistory);
+
+
+        testModeTab.addEventListener('click', () => switchTab('test'));
+        studyModeTab.addEventListener('click', () => switchTab('study'));
+        aiChatTab.addEventListener('click', () => switchTab('chat')); // New tab listener
+
+        darkModeToggle.addEventListener('change', toggleDarkMode);
+        feedbackBtn.addEventListener('click', () => {
+            alert("Thank you for your feedback! This is a placeholder. In a real app, your feedback would be sent to a server.");
+        });
+
+        // --- Helper Functions ---
+
+        /**
+         * Displays an error message in the UI.
+         * @param {string} message - The error message to display.
+         */
+        function displayError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the error message.
+         */
+        function hideError() {
+            errorMessage.classList.add('hidden');
+            errorText.textContent = '';
+        }
+
+        /**
+         * Shows the main loading spinner.
+         */
+        function showLoading() {
+            loadingSpinner.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the main loading spinner.
+         */
+        function hideLoading() {
+            loadingSpinner.classList.add('hidden');
+        }
+
+        /**
+         * Shows the evaluation spinner.
+         */
+        function showEvaluationSpinner() {
+            evaluationSpinner.classList.remove('hidden');
+            submitTestBtn.classList.add('hidden'); // Hide submit button during evaluation
+        }
+
+        /**
+         * Hides the evaluation spinner.
+         */
+        function hideEvaluationSpinner() {
+            evaluationSpinner.classList.add('hidden');
+        }
+
+        /**
+         * Shows the chat loading spinner.
+         */
+        function showChatLoading() {
+            chatLoadingSpinner.classList.remove('hidden');
+            sendChatBtn.disabled = true;
+            chatInput.disabled = true;
+        }
+
+        /**
+         * Hides the chat loading spinner.
+         */
+        function hideChatLoading() {
+            chatLoadingSpinner.classList.add('hidden');
+            sendChatBtn.disabled = false;
+            chatInput.disabled = false;
+            chatInput.focus(); // Keep focus on input after AI response
+        }
+
+        /**
+         * Sends a prompt to the Gemini API and returns the structured JSON response.
+         * @param {string} promptText - The text prompt for the LLM.
+         * @param {object} schema - The JSON schema for the expected response.
+         * @returns {Promise<object|null>} - Parsed JSON response or null on error.
+         */
+        async function getGeminiStructuredResponse(promptText, schema) {
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: promptText }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                }
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content) {
+                    let contentData = result.candidates[0].content;
+                    if (Array.isArray(contentData)) {
+                        contentData = contentData[0];
+                    }
+                    if (contentData && contentData.parts && contentData.parts.length > 0 && contentData.parts[0].text) {
+                        return JSON.parse(contentData.parts[0].text);
+                    }
+                }
+                displayError('Could not get valid response from AI. Response structure unexpected.');
+                return null;
+            } catch (err) {
+                console.error('API Call Error:', err);
+                displayError(`Failed to communicate with AI: ${err.message || 'An unknown error occurred.'}`);
+                return null;
+            }
+        }
+
+        /**
+         * Sends a prompt to the Gemini API and returns plain text response.
+         * @param {string} promptText - The text prompt for the LLM.
+         * @returns {Promise<string|null>} - Plain text response or null on error.
+         */
+        async function getGeminiPlainTextResponse(promptText) {
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: promptText }] }]
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                }
+                displayError('Could not get valid text response from AI. Response structure unexpected.');
+                return null;
+            } catch (err) {
+                console.error('API Call Error:', err);
+                displayError(`Failed to communicate with AI: ${err.message || 'An unknown error occurred.'}`);
+                return null;
+            }
+        }
+
+        /**
+         * Evaluates a short answer using the Gemini AI.
+         * @param {string} questionText - The original question text.
+         * @param {string} userAnswer - The user's provided answer.
+         * @param {string} correctAnswer - The expected correct answer.
+         * @returns {Promise<boolean>} - True if the answer is semantically correct, false otherwise.
+         */
+        async function evaluateShortAnswer(questionText, userAnswer, correctAnswer) {
+            const evaluationPrompt = `Given the question: "${questionText}", the correct answer is: "${correctAnswer}". The user's answer is: "${userAnswer}". Is the user's answer correct or semantically equivalent? Respond with 'true' or 'false' only.`;
+            const evaluationResult = await getGeminiPlainTextResponse(evaluationPrompt);
+            return evaluationResult ? evaluationResult.trim().toLowerCase() === 'true' : false;
+        }
+
+        // --- Test Mode Functions ---
+
+        /**
+         * Resets the UI for Test Mode to its initial state.
+         */
+        function resetTestModeUI() {
+            topicInput.value = '';
+            topicInput.disabled = false;
+            numQuestionsSelect.disabled = false;
+            questionTypeSelect.disabled = false;
+            difficultySelect.disabled = false;
+
+            generateTestBtn.classList.remove('hidden');
+            generateTestBtn.textContent = 'Generate Test';
+            generateTestBtn.disabled = false;
+            newTestBtn.classList.add('hidden');
+
+            hideError();
+            hideLoading();
+            hideEvaluationSpinner();
+
+            testSection.classList.add('hidden');
+            questionsContainer.innerHTML = ''; // Clear questions
+            answerKeySection.classList.add('hidden');
+            answerKeyContainer.innerHTML = ''; // Clear answer key
+            scoreDisplay.classList.add('hidden');
+            scoreDisplay.textContent = '';
+            submitTestBtn.classList.remove('hidden');
+            submitTestBtn.disabled = false;
+            showAnswerKeyBtn.classList.add('hidden');
+            retakeTestBtn.classList.add('hidden');
+            saveProgressBtn.classList.remove('hidden'); // Always show save
+            checkAndShowLoadButton(); // Check if load button should be shown
+            printTestBtn.classList.remove('hidden');
+            printAnswerKeyBtn.classList.add('hidden'); // Initially hidden
+
+            testQuestions = [];
+            userAnswers = {};
+            questionInputElements = [];
+            submissionResults = [];
+        }
+
+        /**
+         * Generates the test based on user input and displays it.
+         */
+        async function generateTest() {
+            const topic = topicInput.value.trim();
+            const numQuestions = numQuestionsSelect.value;
+            const questionType = questionTypeSelect.value;
+            const difficulty = difficultySelect.value;
+
+            if (!topic) {
+                displayError('Please enter a topic to generate a test.');
+                return;
+            }
+
+            // Disable inputs and show loading
+            topicInput.disabled = true;
+            numQuestionsSelect.disabled = true;
+            questionTypeSelect.disabled = true;
+            difficultySelect.disabled = true;
+            generateTestBtn.disabled = true;
+            generateTestBtn.textContent = 'Generating Test...';
+            hideError();
+            showLoading();
+
+            // Hide other sections
+            testSection.classList.add('hidden');
+            answerKeySection.classList.add('hidden');
+            newTestBtn.classList.add('hidden'); // Hide new test button during generation
+            saveProgressBtn.classList.add('hidden'); // Hide save button during generation
+            loadProgressBtn.classList.add('hidden'); // Hide load button during generation
+            printTestBtn.classList.add('hidden'); // Hide print button during generation
+
+            let typePrompt = '';
+            if (questionType === 'mc') {
+                typePrompt = 'multiple-choice questions';
+            } else if (questionType === 'sa') {
+                typePrompt = 'short-answer questions';
+            } else { // both
+                typePrompt = 'multiple-choice and short-answer questions (roughly half each)';
+            }
+
+            const prompt = `Generate ${numQuestions} ${difficulty} ${typePrompt} about the following topic: "${topic}".
+            For multiple-choice questions, provide 4 options and indicate the correct answer.
+            For short-answer questions, provide the correct answer. Ensure the correct answer is concise and directly answers the question.`;
+
+            const responseSchema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "questionText": { "type": "STRING" },
+                        "type": { "type": "STRING", "enum": ["multiple-choice", "short-answer"] },
+                        "options": {
+                            "type": "ARRAY",
+                            "items": { "type": "STRING" }
+                        },
+                        "correctAnswer": { "type": "STRING" }
+                    },
+                    "required": ["questionText", "type", "correctAnswer"]
+                }
+            };
+
+            testQuestions = await getGeminiStructuredResponse(prompt, responseSchema);
+
+            hideLoading();
+            if (testQuestions && testQuestions.length > 0) {
+                displayQuestions();
+                testSection.classList.remove('hidden');
+                generateTestBtn.classList.add('hidden'); // Hide generate button
+                newTestBtn.classList.remove('hidden'); // Show new test button
+                saveProgressBtn.classList.remove('hidden'); // Show save button after generation
+                printTestBtn.classList.remove('hidden'); // Show print test button after generation
+            } else {
+                // Error message already displayed by getGeminiStructuredResponse
+                displayError('Failed to generate test. Please try again or refine your topic.');
+                resetTestModeUI(); // Reset UI on failure
+            }
+
+            generateTestBtn.disabled = false;
+            generateTestBtn.textContent = 'Generate Test';
+        }
+
+        /**
+         * Dynamically creates and displays question elements in the UI.
+         */
+        function displayQuestions() {
+            questionsContainer.innerHTML = ''; // Clear previous questions
+            userAnswers = {}; // Reset user answers
+            questionInputElements = []; // Reset input element references
+
+            testQuestions.forEach((q, index) => {
+                const questionCard = document.createElement('div');
+                questionCard.className = 'question-card dark:bg-gray-800 dark:border-gray-600';
+
+                const questionText = document.createElement('p');
+                questionText.className = 'text-xl font-semibold text-gray-800 mb-4 dark:text-gray-100';
+                questionText.textContent = `${index + 1}. ${q.questionText}`;
+                questionCard.appendChild(questionText);
+
+                if (q.type === 'multiple-choice' && q.options && q.options.length > 0) {
+                    const optionsDiv = document.createElement('div');
+                    optionsDiv.className = 'space-y-3';
+                    q.options.forEach((option, optIndex) => {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center text-gray-700 cursor-pointer dark:text-gray-300';
+
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = `question-${index}`;
+                        input.value = option;
+                        input.className = 'form-radio h-5 w-5 text-blue-600 dark:bg-gray-700 dark:border-gray-500 checked:bg-blue-500';
+                        input.addEventListener('change', () => {
+                            userAnswers[index] = option;
+                        });
+                        questionInputElements.push(input); // Store reference
+
+                        const span = document.createElement('span');
+                        span.className = 'ml-3 font-medium';
+                        span.textContent = `${String.fromCharCode(65 + optIndex)}. ${option}`;
+
+                        label.appendChild(input);
+                        label.appendChild(span);
+                        optionsDiv.appendChild(label);
+                    });
+                    questionCard.appendChild(optionsDiv);
+                } else if (q.type === 'short-answer') {
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-800 min-h-[80px] dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600';
+                    textarea.rows = 3;
+                    textarea.placeholder = 'Type your answer here...';
+                    textarea.addEventListener('input', (e) => {
+                        userAnswers[index] = e.target.value;
+                    });
+                    questionInputElements.push(textarea); // Store reference
+                    questionCard.appendChild(textarea);
+                }
+                questionsContainer.appendChild(questionCard);
+            });
+        }
+
+        /**
+         * Collects user answers, calculates score (with AI evaluation for short answers), and displays results.
+         */
+        async function submitTest() {
+            submitTestBtn.disabled = true;
+            showEvaluationSpinner(); // Show spinner for evaluation
+
+            submissionResults = []; // Reset submission results
+            let correctCount = 0;
+
+            for (let i = 0; i < testQuestions.length; i++) {
+                const q = testQuestions[i];
+                const userAnswer = userAnswers[i] || '';
+                let isCorrect = false;
+
+                if (q.type === 'multiple-choice') {
+                    const normalizedUserAnswer = userAnswer.trim().toLowerCase();
+                    const normalizedCorrectAnswer = q.correctAnswer.trim().toLowerCase();
+                    isCorrect = (normalizedUserAnswer === normalizedCorrectAnswer);
+                } else if (q.type === 'short-answer') {
+                    // AI evaluation for short answers
+                    isCorrect = await evaluateShortAnswer(q.questionText, userAnswer, q.correctAnswer);
+                }
+                if (isCorrect) {
+                    correctCount++;
+                }
+                submissionResults.push({
+                    questionIndex: i,
+                    userAnswer: userAnswer,
+                    correctAnswer: q.correctAnswer,
+                    isCorrect: isCorrect,
+                    type: q.type,
+                    questionText: q.questionText // Add question text for explanation feature
+                });
+            }
+
+            hideEvaluationSpinner();
+            scoreDisplay.textContent = `Your Score: ${correctCount} out of ${testQuestions.length}`;
+            scoreDisplay.classList.remove('hidden');
+            submitTestBtn.classList.add('hidden'); // Hide submit button
+            showAnswerKeyBtn.classList.remove('hidden'); // Show answer key button
+            retakeTestBtn.classList.remove('hidden'); // Show retake test button
+
+            // Disable all input elements after submission
+            questionInputElements.forEach(input => {
+                input.disabled = true;
+            });
+        }
+
+        /**
+         * Displays the answer key section.
+         */
+        function showAnswerKey() {
+            answerKeyContainer.innerHTML = ''; // Clear previous answer key content
+            answerKeySection.classList.remove('hidden');
+            printAnswerKeyBtn.classList.remove('hidden'); // Ensure print answer key button is visible
+
+            submissionResults.forEach((result, index) => {
+                const q = testQuestions[index]; // Get original question details
+
+                const answerCard = document.createElement('div');
+                answerCard.className = 'mb-4 p-4 rounded-lg border dark:bg-gray-800 dark:border-gray-600';
+
+                if (result.isCorrect) {
+                    answerCard.classList.add('bg-green-50', 'border-green-200');
+                    answerCard.classList.remove('bg-red-50', 'border-red-200');
+                } else {
+                    answerCard.classList.add('bg-red-50', 'border-red-200');
+                    answerCard.classList.remove('bg-green-50', 'border-green-200');
+                }
+                // Dark mode specific classes for correct/incorrect backgrounds
+                if (document.body.classList.contains('dark-mode')) {
+                    if (result.isCorrect) {
+                        answerCard.classList.add('dark:bg-green-900', 'dark:border-green-700');
+                    } else {
+                        answerCard.classList.add('dark:bg-red-900', 'dark:border-red-700');
+                    }
+                }
+
+
+                const questionText = document.createElement('p');
+                questionText.className = 'text-lg font-semibold text-gray-800 mb-2 dark:text-gray-100';
+                questionText.textContent = `${index + 1}. ${q.questionText}`;
+                answerCard.appendChild(questionText);
+
+                const correctAnswer = document.createElement('p');
+                correctAnswer.className = 'text-green-700 font-medium dark:text-green-300';
+                correctAnswer.textContent = `Correct Answer: ${result.correctAnswer}`;
+                answerCard.appendChild(correctAnswer);
+
+                const yourAnswer = document.createElement('p');
+                yourAnswer.className = 'text-gray-600 text-sm mt-1 dark:text-gray-400';
+                yourAnswer.textContent = `Your Answer: ${result.userAnswer || 'No answer provided'}`;
+                answerCard.appendChild(yourAnswer);
+
+                // Add status (Correct/Incorrect)
+                const status = document.createElement('p');
+                status.className = 'text-sm mt-1';
+                if (result.isCorrect) {
+                    status.classList.add('text-green-700', 'dark:text-green-300');
+                    status.textContent = 'Status: Correct!';
+                } else {
+                    status.classList.add('text-red-700', 'dark:text-red-300');
+                    status.textContent = 'Status: Incorrect.';
+                }
+                answerCard.appendChild(status);
+
+                // Add Explain button
+                const explainBtn = document.createElement('button');
+                explainBtn.className = 'mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition duration-200 dark:bg-blue-700 dark:hover:bg-blue-800';
+                explainBtn.textContent = '✨ Explain';
+                explainBtn.addEventListener('click', async () => {
+                    explainBtn.disabled = true;
+                    explainBtn.textContent = 'Explaining...';
+                    const explanationPrompt = `Explain the concept related to this question: "${q.questionText}". The correct answer is "${q.correctAnswer}". Also, briefly comment on the user's answer if provided: "${result.userAnswer}". Provide a concise explanation.`;
+                    const explanation = await getGeminiPlainTextResponse(explanationPrompt);
+                    if (explanation) {
+                        const explanationDiv = document.createElement('div');
+                        explanationDiv.className = 'mt-3 p-3 bg-blue-100 border border-blue-300 rounded-lg text-sm text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200';
+                        explanationDiv.textContent = explanation;
+                        answerCard.appendChild(explanationDiv);
+                    }
+                    explainBtn.classList.add('hidden'); // Hide after explanation
+                });
+                answerCard.appendChild(explainBtn);
+
+                answerKeyContainer.appendChild(answerCard);
+            });
+        }
+
+        /**
+         * Clears user answers and re-enables inputs for retaking the test.
+         */
+        function retakeTest() {
+            userAnswers = {}; // Clear user answers
+            submissionResults = []; // Clear evaluation results
+            scoreDisplay.classList.add('hidden');
+            submitTestBtn.classList.remove('hidden');
+            submitTestBtn.disabled = false;
+            showAnswerKeyBtn.classList.add('hidden');
+            retakeTestBtn.classList.add('hidden');
+            answerKeySection.classList.add('hidden'); // Hide answer key
+            printAnswerKeyBtn.classList.add('hidden'); // Hide print answer key button
+
+            // Re-enable all input elements and clear their values
+            questionInputElements.forEach(input => {
+                input.disabled = false;
+                if (input.type === 'radio') {
+                    input.checked = false;
+                } else if (input.tagName === 'TEXTAREA') {
+                    input.value = '';
+                }
+            });
+        }
+
+        /**
+         * Saves the current test state to local storage.
+         */
+        function saveProgress() {
+            const dataToSave = {
+                topic: topicInput.value,
+                numQuestions: numQuestionsSelect.value,
+                questionType: questionTypeSelect.value,
+                difficulty: difficultySelect.value,
+                testQuestions: testQuestions,
+                userAnswers: userAnswers,
+                submissionResults: submissionResults,
+                isTestSubmitted: submitTestBtn.classList.contains('hidden') // Check if submit button is hidden
+            };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+            alert('Test progress saved!');
+            checkAndShowLoadButton(); // Update load button visibility
+        }
+
+        /**
+         * Loads the last saved test state from local storage.
+         */
+        function loadProgress() {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+
+                // Populate input fields
+                topicInput.value = data.topic;
+                numQuestionsSelect.value = data.numQuestions;
+                questionTypeSelect.value = data.questionType;
+                difficultySelect.value = data.difficulty;
+
+                // Set test questions and user answers
+                testQuestions = data.testQuestions;
+                userAnswers = data.userAnswers || {};
+                submissionResults = data.submissionResults || [];
+
+                // Display questions and populate user answers
+                displayQuestions();
+                testSection.classList.remove('hidden');
+
+                // Re-populate user answers into the displayed inputs
+                testQuestions.forEach((q, index) => {
+                    const userAnswerValue = userAnswers[index];
+                    if (userAnswerValue !== undefined) {
+                        if (q.type === 'multiple-choice') {
+                            const radioInput = document.querySelector(`input[name="question-${index}"][value="${userAnswerValue}"]`);
+                            if (radioInput) {
+                                radioInput.checked = true;
+                            }
+                        } else if (q.type === 'short-answer') {
+                            const textarea = questionsContainer.querySelector(`textarea[name="question-${index}"]`);
+                            if (textarea) {
+                                textarea.value = userAnswerValue;
+                            }
+                        }
+                    }
+                });
+
+                // Set UI state based on whether the test was submitted
+                if (data.isTestSubmitted) {
+                    submitTestBtn.classList.add('hidden');
+                    submitTestBtn.disabled = true;
+                    scoreDisplay.textContent = `Your Score: ${submissionResults.filter(r => r.isCorrect).length} out of ${testQuestions.length}`;
+                    scoreDisplay.classList.remove('hidden');
+                    showAnswerKeyBtn.classList.remove('hidden');
+                    retakeTestBtn.classList.remove('hidden');
+                    // Disable all inputs
+                    questionInputElements.forEach(input => { input.disabled = true; });
+                } else {
+                    submitTestBtn.classList.remove('hidden');
+                    submitTestBtn.disabled = false;
+                    scoreDisplay.classList.add('hidden');
+                    showAnswerKeyBtn.classList.add('hidden');
+                    retakeTestBtn.classList.add('hidden');
+                    // Ensure inputs are enabled if not submitted
+                    questionInputElements.forEach(input => { input.disabled = false; });
+                }
+
+                // Update control buttons
+                generateTestBtn.classList.add('hidden');
+                newTestBtn.classList.remove('hidden');
+                topicInput.disabled = true;
+                numQuestionsSelect.disabled = true;
+                questionTypeSelect.disabled = true;
+                difficultySelect.disabled = true;
+
+                alert('Test loaded successfully!');
+            } else {
+                alert('No saved test found!');
+            }
+        }
+
+        /**
+         * Checks local storage and shows/hides the load button.
+         */
+        function checkAndShowLoadButton() {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                loadProgressBtn.classList.remove('hidden');
+            } else {
+                loadProgressBtn.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Prints a specific section of the page.
+         * @param {string} sectionId - The ID of the section to print.
+         * @param {string} title - The title for the printout.
+         */
+        function printSection(sectionId, title) {
+            const printContent = document.getElementById(sectionId).outerHTML;
+            const originalBody = document.body.innerHTML;
+            document.body.innerHTML = printContent;
+            document.title = title; // Set print title
+            window.print();
+            document.body.innerHTML = originalBody; // Restore original content
+            location.reload(); // Reload to fully restore event listeners etc.
+        }
+
+        // --- Study Mode Functions ---
+
+        /**
+         * Resets the UI for Study Mode to its initial state.
+         */
+        function resetStudyModeUI() {
+            studyTopicInput.value = '';
+            studyTopicInput.disabled = false;
+            studyModeTypeSelect.disabled = false;
+            generateStudyMaterialBtn.disabled = false;
+            generateStudyMaterialBtn.textContent = 'Generate Study Material';
+            clearStudyMaterialBtn.classList.add('hidden');
+
+            hideError();
+            hideLoading();
+            studyMaterialSection.classList.add('hidden');
+            studyMaterialTitle.textContent = '';
+            studyMaterialContent.innerHTML = '';
+            flashcards = [];
+            currentFlashcardIndex = 0;
+        }
+
+        /**
+         * Generates study material (summary or flashcards) based on user input.
+         */
+        async function generateStudyMaterial() {
+            const topic = studyTopicInput.value.trim();
+            const studyType = studyModeTypeSelect.value;
+
+            if (!topic) {
+                displayError('Please enter a topic for study material.');
+                return;
+            }
+
+            // Disable inputs and show loading
+            studyTopicInput.disabled = true;
+            studyModeTypeSelect.disabled = true;
+            generateStudyMaterialBtn.disabled = true;
+            generateStudyMaterialBtn.textContent = 'Generating...';
+            hideError();
+            showLoading();
+
+            // Hide previous study material
+            studyMaterialSection.classList.add('hidden');
+            studyMaterialTitle.textContent = '';
+            studyMaterialContent.innerHTML = '';
+            clearStudyMaterialBtn.classList.add('hidden');
+
+            let generatedContent = null;
+
+            if (studyType === 'summary') {
+                const prompt = `Provide a concise, 3-paragraph summary of the following topic: "${topic}".`;
+                generatedContent = await getGeminiPlainTextResponse(prompt);
+                if (generatedContent) {
+                    studyMaterialTitle.textContent = `Summary of "${topic}"`;
+                    studyMaterialContent.innerHTML = `<div class="summary-card whitespace-pre-wrap dark:bg-gray-800 dark:text-gray-100">${generatedContent}</div>`;
+                }
+            } else if (studyType === 'flashcards') {
+                const prompt = `Generate 10 flashcards (question and answer pairs) about the following topic: "${topic}". Provide the output as a JSON array of objects, where each object has "question" and "answer" properties.`;
+                const schema = {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            "question": { "type": "STRING" },
+                            "answer": { "type": "STRING" }
+                        },
+                        "required": ["question", "answer"]
+                    }
+                };
+                flashcards = await getGeminiStructuredResponse(prompt, schema);
+                if (flashcards && flashcards.length > 0) {
+                    studyMaterialTitle.textContent = `Flashcards for "${topic}"`;
+                    currentFlashcardIndex = 0; // Reset to first flashcard
+                    displayFlashcard();
+                    generatedContent = true; // Indicate success for UI
+                } else if (flashcards && flashcards.length === 0) {
+                    displayError('No flashcards generated for this topic. Please try another topic.');
+                }
+            } else if (studyType === 'notes') { // New 'notes' option
+                const prompt = `Provide detailed study notes with key concepts, important points, and examples for the topic: "${topic}". Organize it with headings and bullet points.`;
+                generatedContent = await getGeminiPlainTextResponse(prompt);
+                if (generatedContent) {
+                    studyMaterialTitle.textContent = `Study Notes for "${topic}"`;
+                    // Use a simple markdown-like rendering for notes (basic line breaks)
+                    studyMaterialContent.innerHTML = `<div class="notes-card whitespace-pre-wrap dark:bg-gray-800 dark:text-gray-100">${generatedContent}</div>`;
+                }
+            }
+
+            hideLoading();
+            if (generatedContent) {
+                studyMaterialSection.classList.remove('hidden');
+                clearStudyMaterialBtn.classList.remove('hidden');
+            } else {
+                // Error message already displayed by API call functions
+                resetStudyModeUI(); // Reset UI on failure
+            }
+
+            generateStudyMaterialBtn.disabled = false;
+            generateStudyMaterialBtn.textContent = 'Generate Study Material';
+        }
+
+        /**
+         * Displays the current flashcard and navigation buttons.
+         */
+        function displayFlashcard() {
+            studyMaterialContent.innerHTML = ''; // Clear previous content
+            if (flashcards.length === 0) return;
+
+            const card = flashcards[currentFlashcardIndex];
+
+            const flipContainer = document.createElement('div');
+            flipContainer.className = 'flashcard-flip-container';
+            flipContainer.addEventListener('click', () => {
+                flipContainer.classList.toggle('flipped');
+            });
+
+            const flipper = document.createElement('div');
+            flipper.className = 'flashcard-flipper';
+
+            const front = document.createElement('div');
+            front.className = 'flashcard-front dark:bg-blue-800 dark:text-blue-100';
+            front.textContent = card.question;
+
+            const back = document.createElement('div');
+            back.className = 'flashcard-back dark:bg-green-800 dark:text-green-100';
+            back.textContent = card.answer;
+
+            flipper.appendChild(front);
+            flipper.appendChild(back);
+            flipContainer.appendChild(flipper);
+            studyMaterialContent.appendChild(flipContainer);
+
+            // Navigation buttons
+            const navDiv = document.createElement('div');
+            navDiv.className = 'flex justify-between items-center mt-6';
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800';
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentFlashcardIndex === 0;
+            prevBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card flip
+                if (currentFlashcardIndex > 0) {
+                    currentFlashcardIndex--;
+                    displayFlashcard();
+                }
+            });
+
+            const counter = document.createElement('span');
+            counter.className = 'text-gray-600 font-medium dark:text-gray-300';
+            counter.textContent = `${currentFlashcardIndex + 1} / ${flashcards.length}`;
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800';
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentFlashcardIndex === flashcards.length - 1;
+            nextBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card flip
+                if (currentFlashcardIndex < flashcards.length - 1) {
+                    currentFlashcardIndex++;
+                    displayFlashcard();
+                }
+            });
+
+            navDiv.appendChild(prevBtn);
+            navDiv.appendChild(counter);
+            navDiv.appendChild(nextBtn);
+            studyMaterialContent.appendChild(navDiv);
+        }
+
+        // --- AI Chat Mode Functions ---
+
+        /**
+         * Clears the chat history and resets the AI Chat UI.
+         */
+        function clearChatHistory() {
+            chatHistory = [];
+            localStorage.removeItem(CHAT_HISTORY_KEY);
+            chatHistoryDiv.innerHTML = '';
+            chatTopicInput.value = '';
+            chatInput.value = '';
+            displayChatMessage('AI', 'Hello! Ask me anything about your study topics. You can also set a topic above to guide our conversation.');
+        }
+
+        /**
+         * Adds a message to the chat history display.
+         * @param {string} sender - 'User' or 'AI'.
+         * @param {string} message - The message text.
+         */
+        function displayChatMessage(sender, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender === 'User' ? 'chat-user' : 'chat-ai'}`;
+            messageDiv.textContent = message;
+            chatHistoryDiv.appendChild(messageDiv);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; // Scroll to bottom
+        }
+
+        /**
+         * Sends a user message to the AI and displays the response.
+         */
+        async function sendChatMessage() {
+            const userMessage = chatInput.value.trim();
+            if (!userMessage) return;
+
+            displayChatMessage('User', userMessage);
+            chatInput.value = ''; // Clear input field
+            showChatLoading();
+
+            const chatTopic = chatTopicInput.value.trim();
+            let prompt = userMessage;
+            if (chatTopic) {
+                prompt = `Regarding the topic "${chatTopic}", ${userMessage}`;
+            }
+
+            // Add user message to chat history for API context
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+            const payload = {
+                contents: chatHistory
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const aiResponse = result.candidates[0].content.parts[0].text;
+                    displayChatMessage('AI', aiResponse);
+                    // Add AI response to chat history
+                    chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory)); // Save chat history
+                } else {
+                    displayChatMessage('AI', 'Sorry, I could not generate a response.');
+                }
+            } catch (err) {
+                console.error('Chat AI Error:', err);
+                displayChatMessage('AI', `Sorry, I encountered an error: ${err.message || 'An unknown error occurred.'}`);
+            } finally {
+                hideChatLoading();
+            }
+        }
+
+        /**
+         * Loads chat history from local storage.
+         */
+        function loadChatHistory() {
+            const savedChat = localStorage.getItem(CHAT_HISTORY_KEY);
+            if (savedChat) {
+                chatHistory = JSON.parse(savedChat);
+                chatHistoryDiv.innerHTML = ''; // Clear existing messages
+                chatHistory.forEach(msg => {
+                    if (msg.role === 'user' || msg.role === 'model') {
+                        displayChatMessage(msg.role === 'user' ? 'User' : 'AI', msg.parts[0].text);
+                    }
+                });
+            } else {
+                displayChatMessage('AI', 'Hello! Ask me anything about your study topics. You can also set a topic above to guide our conversation.');
+            }
+        }
+
+
+        // --- Tab Switching Logic ---
+        function switchTab(mode) {
+            // Deactivate all tabs and hide all content divs
+            testModeTab.classList.remove('active', 'bg-indigo-600', 'text-white');
+            testModeTab.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            studyModeTab.classList.remove('active', 'bg-indigo-600', 'text-white');
+            studyModeTab.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            aiChatTab.classList.remove('active', 'bg-indigo-600', 'text-white');
+            aiChatTab.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+
+            testModeContent.classList.add('hidden');
+            studyModeContent.classList.add('hidden');
+            aiChatContent.classList.add('hidden');
+
+            // Activate the selected tab and show its content
+            if (mode === 'test') {
+                testModeTab.classList.add('active', 'bg-indigo-600', 'text-white');
+                testModeContent.classList.remove('hidden');
+            } else if (mode === 'study') {
+                studyModeTab.classList.add('active', 'bg-indigo-600', 'text-white');
+                studyModeContent.classList.remove('hidden');
+            } else if (mode === 'chat') {
+                aiChatTab.classList.add('active', 'bg-indigo-600', 'text-white');
+                aiChatContent.classList.remove('hidden');
+                loadChatHistory(); // Load chat history when switching to chat tab
+            }
+            hideError(); // Hide error when switching tabs
+        }
+
+        /**
+         * Toggles dark mode on/off.
+         */
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            // Save preference to local storage
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Apply dark mode preference on load
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.checked = true;
+            }
+
+            resetTestModeUI();
+            resetStudyModeUI();
+            // Do not call loadChatHistory here directly, it's called when switching to chat tab
+            switchTab('test'); // Start with Test Mode active
+            checkAndShowLoadButton(); // Check for saved data on load
+        });
+    </script>
+</body>
+</html>
