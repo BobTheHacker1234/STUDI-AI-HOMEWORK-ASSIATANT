@@ -11,6 +11,7 @@ STUDI is your personal AI-powered study assistant bot. Designed for students of 
 - 🔔 **Smart Reminders** – Never miss a deadline again.
 
 ## 🚀 Getting Started
-1. Go to Google's Gemini and copy the API key
-2. Paste the API key in the API line of code with the empty quotations it should look like this key = ""
-3. Run the code and enjoy or right click on the file and open with desired web browser!
+1. Copy and Paste all the code into a .html file
+2. Go to Google's Gemini and copy the API key
+3. Paste the API key in the API line of code with the empty quotations it should look like this key = ""
+4. Run the code in a code editor or right-click on the file and open with desired web browser!
