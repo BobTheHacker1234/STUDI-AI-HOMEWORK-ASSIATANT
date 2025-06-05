@@ -12,6 +12,6 @@ STUDI is your personal AI-powered study assistant bot. Designed for students of 
 
 ## 🚀 Getting Started
 1. Copy and Paste all the code into a .html file or just download the code as a zip file by pressing on the dark green "Code" button and then click "Download zip" at the bottom
-2. Go to Google's Gemini and copy the API key
+2. Go to Google's Gemini and copy the API key or just go to this link https://aistudio.google.com/app/apikey
 3. Paste the API key in the API line of code with the empty quotations it should look like this key = ""
 4. Run the code in a code editor or right-click on the file and open with desired web browser!
